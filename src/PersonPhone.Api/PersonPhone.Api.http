@@ -1,0 +1,17 @@
+@HostAddress = http://localhost:5196
+
+GET {{HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+POST {{HostAddress}}/person
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "cpf": "12345678900",
+  "birthDate": "1990-01-01"
+}
+
+###

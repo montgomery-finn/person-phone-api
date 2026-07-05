@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PersonPhone.Domain.Entities;
 using PersonPhone.Domain.Interfaces;
+using PersonPhone.Application.DTOs.Person;
 
 namespace PersonPhone.Api.Controllers;
 
@@ -14,8 +15,6 @@ public class PersonController : ControllerBase
     {
         _personRepository = personRepository;
     }
-
-    public record CreatePersonRequest(string name, string cpf, DateTime birthDate);
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreatePersonRequest request)

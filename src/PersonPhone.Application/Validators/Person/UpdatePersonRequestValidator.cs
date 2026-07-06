@@ -17,6 +17,7 @@ public class UpdatePersonRequestDtoValidator : AbstractValidator<UpdatePersonReq
             .Must(Cpf.IsValid).WithMessage("Cpf is invalid.");
 
         RuleFor(p => p.BirthDate)
+            .NotNull().WithMessage("BirthDate is required.")
             .LessThan(DateTime.Today).WithMessage("BirthDate must be in the past.");
     }
 }

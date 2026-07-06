@@ -16,7 +16,7 @@ public class PersonService : IPersonService
     {
         var (name, cpf, birthDate) = request;
 
-        var person = new Domain.Entities.Person(name, cpf, birthDate);
+        var person = new Domain.Entities.Person(name, cpf, birthDate!.Value);
 
         await _personRepository.AddAsync(person);
 
@@ -45,7 +45,7 @@ public class PersonService : IPersonService
             return null;
 
         var (name, cpf, birthDate) = request;
-        person.Update(name, cpf, birthDate);
+        person.Update(name, cpf, birthDate!.Value);
 
         await _personRepository.UpdateAsync(person);
 

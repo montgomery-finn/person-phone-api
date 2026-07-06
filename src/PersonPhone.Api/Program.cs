@@ -1,5 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using PersonPhone.Application.Services.Person;
 using PersonPhone.Application.Validators.Person;
 using PersonPhone.Domain.Interfaces;
@@ -23,7 +25,34 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IPersonRepository, InMemoryPersonRepository>();
 builder.Services.AddScoped<IPersonService, PersonService>();
 
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
+
+// Traduz exceções não tratadas (ex: regras de domínio violadas) em ProblemDetails,
+// no mesmo formato que o FluentValidation já usa para erros de validação.
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
+        var statusCode = exception is ArgumentException
+            ? StatusCodes.Status400BadRequest
+            : StatusCodes.Status500InternalServerError;
+
+        context.Response.StatusCode = statusCode;
+
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = statusCode,
+            Title = statusCode == StatusCodes.Status400BadRequest
+                ? "One or more validation errors occurred."
+                : "An unexpected error occurred.",
+            Detail = exception?.Message
+        });
+    });
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

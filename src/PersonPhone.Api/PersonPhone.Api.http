@@ -1,8 +1,5 @@
 @HostAddress = http://localhost:5196
 
-GET {{HostAddress}}/weatherforecast/
-Accept: application/json
-
 ###
 
 POST {{HostAddress}}/person
@@ -10,7 +7,7 @@ Content-Type: application/json
 
 {
   "name": "John Doe",
-  "cpf": "12345678900",
+  "cpf": "11144477735",
   "birthDate": "1990-01-01"
 }
 
@@ -21,7 +18,22 @@ Accept: application/json
 
 ###
 
-GET {{HostAddress}}/person/d79a54e2-08e8-49b9-9dfd-884a83492117
+GET {{HostAddress}}/person/bb8a672a-ca8f-49fb-b5cd-431a809c4e90
 Accept: application/json
+
+###
+
+PUT {{HostAddress}}/person/bb8a672a-ca8f-49fb-b5cd-431a809c4e90
+Content-Type: application/json
+
+{
+  "name": "John Doe Updated",
+  "cpf": "11144477735",
+  "birthDate": "1990-01-01"
+}
+
+###
+
+DELETE {{HostAddress}}/person/bb8a672a-ca8f-49fb-b5cd-431a809c4e90
 
 ###

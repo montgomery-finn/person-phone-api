@@ -24,7 +24,26 @@ public class PersonController : ControllerBase
         var person = new Person(name, cpf, birthDate);
 
         await _personRepository.AddAsync(person);
-        
+
+        return CreatedAtAction(nameof(GetById), new { id = person.Id}, person);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var people = await _personRepository.GetAllAsync();
+
+        return Ok(people);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var person = await _personRepository.GetByIdAsync(id);
+
+        if (person is null)
+            return NotFound();
+
         return Ok(person);
     }
 }

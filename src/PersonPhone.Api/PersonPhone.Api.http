@@ -15,3 +15,13 @@ Content-Type: application/json
 }
 
 ###
+
+GET {{HostAddress}}/person
+Accept: application/json
+
+###
+
+GET {{HostAddress}}/person/d79a54e2-08e8-49b9-9dfd-884a83492117
+Accept: application/json
+
+###

@@ -1,16 +1,18 @@
+using PersonPhone.Domain.ValueObjects;
+
 namespace PersonPhone.Domain.Entities;
 
 public class Person
 {
     public Guid Id { get; private set; }
     public string Name { get; private set; }
-    public string Cpf { get; private set; }
+    public Cpf Cpf { get; private set; }
     public DateTime BirthDate { get; private set; }
     public bool IsActive { get; private set; }
 
     public Person()
     {
-        
+
     }
 
     public Person(string name, string cpf, DateTime birthDate)
@@ -18,12 +20,9 @@ public class Person
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name is required.", nameof(name));
 
-        if (string.IsNullOrWhiteSpace(cpf))
-            throw new ArgumentException("Cpf is required.", nameof(cpf));
-
         Id = Guid.NewGuid();
         Name = name;
-        Cpf = cpf;
+        Cpf = new Cpf(cpf);
         BirthDate = birthDate;
         IsActive = true;
     }

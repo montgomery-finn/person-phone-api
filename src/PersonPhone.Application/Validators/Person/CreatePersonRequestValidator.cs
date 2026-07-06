@@ -1,5 +1,6 @@
 using FluentValidation;
 using PersonPhone.Application.DTOs.Person;
+using PersonPhone.Domain.ValueObjects;
 
 namespace PersonPhone.Application.Validators.Person;
 
@@ -13,7 +14,7 @@ public class CreatePersonRequestDtoValidator : AbstractValidator<CreatePersonReq
 
         RuleFor(p => p.Cpf)
             .NotEmpty().WithMessage("Cpf is required.")
-            .Length(11).WithMessage("Cpf is invalid.");
+            .Must(Cpf.IsValid).WithMessage("Cpf is invalid.");
 
         RuleFor(p => p.BirthDate)
             .LessThan(DateTime.Today).WithMessage("BirthDate must be in the past.");

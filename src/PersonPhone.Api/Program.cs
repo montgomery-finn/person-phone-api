@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using PersonPhone.Application.Services.Person;
 using PersonPhone.Application.Validators.Person;
 using PersonPhone.Domain.Interfaces;
 using PersonPhone.Infrastructure.Repositories;
@@ -20,6 +21,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddOpenApi();
 
 builder.Services.AddSingleton<IPersonRepository, InMemoryPersonRepository>();
+builder.Services.AddScoped<IPersonService, PersonService>();
 
 var app = builder.Build();
 

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using PersonPhone.Domain.Entities;
-using PersonPhone.Domain.Interfaces;
 using PersonPhone.Application.DTOs.Person;
+using PersonPhone.Application.Services.Person;
 
 namespace PersonPhone.Api.Controllers;
 
@@ -9,29 +8,25 @@ namespace PersonPhone.Api.Controllers;
 [Route("[controller]")]
 public class PersonController : ControllerBase
 {
-    private readonly IPersonRepository _personRepository;
+    private readonly IPersonService _personService;
 
-    public PersonController(IPersonRepository personRepository)
+    public PersonController(IPersonService personService)
     {
-        _personRepository = personRepository;
+        _personService = personService;
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreatePersonRequest request)
     {
-        var (name, cpf, birthDate) = request;
-        
-        var person = new Person(name, cpf, birthDate);
+        var response = await _personService.CreateAsync(request);
 
-        await _personRepository.AddAsync(person);
-
-        return CreatedAtAction(nameof(GetById), new { id = person.Id}, person);
+        return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var people = await _personRepository.GetAllAsync();
+        var people = await _personService.GetAllAsync();
 
         return Ok(people);
     }
@@ -39,11 +34,11 @@ public class PersonController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var person = await _personRepository.GetByIdAsync(id);
+        var response = await _personService.GetByIdAsync(id);
 
-        if (person is null)
+        if (response is null)
             return NotFound();
 
-        return Ok(person);
+        return Ok(response);
     }
 }

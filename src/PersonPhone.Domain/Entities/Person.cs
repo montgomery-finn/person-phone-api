@@ -1,8 +1,9 @@
+using PersonPhone.Domain.Common;
 using PersonPhone.Domain.ValueObjects;
 
 namespace PersonPhone.Domain.Entities;
 
-public class Person
+public class Person : IEntity
 {
     public Guid Id { get; private set; }
     public string Name { get; private set; }

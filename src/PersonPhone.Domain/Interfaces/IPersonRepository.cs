@@ -8,4 +8,5 @@ public interface IPersonRepository
     Task<IEnumerable<Person>> GetAllAsync();
     Task<Person?> GetByIdAsync(Guid id);
     Task UpdateAsync(Person person);
+    Task<bool> ExistsByCpfAsync(string cpf, Guid? excludingId = null);
 }

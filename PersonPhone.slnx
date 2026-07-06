@@ -6,6 +6,7 @@
     <Project Path="src/PersonPhone.Infrastructure/PersonPhone.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/PersonPhone.Application.UnitTests/PersonPhone.Application.UnitTests.csproj" />
     <Project Path="tests/PersonPhone.Domain.UnitTests/PersonPhone.Domain.UnitTests.csproj" />
   </Folder>
 </Solution>

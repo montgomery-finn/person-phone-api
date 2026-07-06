@@ -30,4 +30,10 @@ public class InMemoryPersonRepository : IPersonRepository
         _people[person.Id] = person;
         return Task.CompletedTask;
     }
+
+    public Task<bool> ExistsByCpfAsync(string cpf, Guid? excludingId = null)
+    {
+        var exists = _people.Values.Any(p => p.Id != excludingId && p.Cpf.Value == cpf);
+        return Task.FromResult(exists);
+    }
 }

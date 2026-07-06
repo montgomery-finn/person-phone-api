@@ -18,6 +18,9 @@ public class PersonService : IPersonService
 
         var person = new Domain.Entities.Person(name, cpf, birthDate!.Value);
 
+        if (await _personRepository.ExistsByCpfAsync(person.Cpf.Value))
+            throw new ArgumentException("Cpf already registered.", nameof(request));
+
         await _personRepository.AddAsync(person);
 
         return ToResponse(person);
@@ -45,6 +48,10 @@ public class PersonService : IPersonService
             return null;
 
         var (name, cpf, birthDate) = request;
+
+        if (await _personRepository.ExistsByCpfAsync(new Domain.ValueObjects.Cpf(cpf).Value, excludingId: id))
+            throw new ArgumentException("Cpf already registered.", nameof(request));
+
         person.Update(name, cpf, birthDate!.Value);
 
         await _personRepository.UpdateAsync(person);

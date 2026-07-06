@@ -37,3 +37,40 @@ Content-Type: application/json
 DELETE {{HostAddress}}/person/bb8a672a-ca8f-49fb-b5cd-431a809c4e90
 
 ###
+
+# 400 Bad Request - Cpf already registered (duplicate on create, even if the
+# original Person with this Cpf was soft-deleted via DELETE above)
+POST {{HostAddress}}/person
+Content-Type: application/json
+
+{
+  "name": "Another Person",
+  "cpf": "11144477735",
+  "birthDate": "1985-05-20"
+}
+
+###
+
+# Create a second Person with a different Cpf, to set up the update conflict below
+POST {{HostAddress}}/person
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "cpf": "52998224725",
+  "birthDate": "1992-02-02"
+}
+
+###
+
+# 400 Bad Request - Cpf already registered (update trying to reuse Jane Doe's Cpf)
+PUT {{HostAddress}}/person/1510bd62-31ed-493f-88b1-ff067e69b1d4
+Content-Type: application/json
+
+{
+  "name": "John Doe Updated",
+  "cpf": "52998224725",
+  "birthDate": "1990-01-01"
+}
+
+###

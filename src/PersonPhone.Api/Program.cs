@@ -1,5 +1,4 @@
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using PersonPhone.Application.Services.Person;
@@ -15,9 +14,6 @@ builder.Services.AddControllers();
 
 // Registra TODOS os validators do assembly automaticamente
 builder.Services.AddValidatorsFromAssemblyContaining<CreatePersonRequestDtoValidator>();
-
-// Habilita a auto-validação no pipeline (roda antes do Controller)
-builder.Services.AddFluentValidationAutoValidation();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

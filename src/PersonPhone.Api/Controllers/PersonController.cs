@@ -1,4 +1,6 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using PersonPhone.Api.Extensions;
 using PersonPhone.Application.DTOs.Person;
 using PersonPhone.Application.Services.Person;
 
@@ -16,8 +18,13 @@ public class PersonController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreatePersonRequest request)
+    public async Task<IActionResult> Create(
+        [FromBody] CreatePersonRequest request,
+        IValidator<CreatePersonRequest> validator)
     {
+        if (await this.ValidateAsync(validator, request) is { } validationError) // testa se o resultado da task é diferente de nulo e atribui à variável
+            return validationError;
+
         var response = await _personService.CreateAsync(request);
 
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
@@ -43,8 +50,14 @@ public class PersonController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePersonRequest request)
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] UpdatePersonRequest request,
+        IValidator<UpdatePersonRequest> validator)
     {
+        if (await this.ValidateAsync(validator, request) is { } validationError)
+            return validationError;
+
         var response = await _personService.UpdateAsync(id, request);
 
         if (response is null)

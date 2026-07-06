@@ -7,4 +7,6 @@ public interface IPersonService
     Task<PersonResponse> CreateAsync(CreatePersonRequest request);
     Task<IEnumerable<PersonResponse>> GetAllAsync();
     Task<PersonResponse?> GetByIdAsync(Guid id);
+    Task<PersonResponse?> UpdateAsync(Guid id, UpdatePersonRequest request);
+    Task<bool> DeleteAsync(Guid id);
 }

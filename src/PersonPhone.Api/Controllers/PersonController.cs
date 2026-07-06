@@ -41,4 +41,26 @@ public class PersonController : ControllerBase
 
         return Ok(response);
     }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePersonRequest request)
+    {
+        var response = await _personService.UpdateAsync(id, request);
+
+        if (response is null)
+            return NotFound();
+
+        return Ok(response);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var deleted = await _personService.DeleteAsync(id);
+
+        if (!deleted)
+            return NotFound();
+
+        return NoContent();
+    }
 }

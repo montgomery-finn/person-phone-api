@@ -37,6 +37,34 @@ public class PersonService : IPersonService
         return person is null ? null : ToResponse(person);
     }
 
+    public async Task<PersonResponse?> UpdateAsync(Guid id, UpdatePersonRequest request)
+    {
+        var person = await _personRepository.GetByIdAsync(id);
+
+        if (person is null)
+            return null;
+
+        var (name, cpf, birthDate) = request;
+        person.Update(name, cpf, birthDate);
+
+        await _personRepository.UpdateAsync(person);
+
+        return ToResponse(person);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        var person = await _personRepository.GetByIdAsync(id);
+
+        if (person is null)
+            return false;
+
+        person.Deactivate();
+        await _personRepository.UpdateAsync(person);
+
+        return true;
+    }
+
     private static PersonResponse ToResponse(Domain.Entities.Person person)
     {
         return new PersonResponse(person.Id, person.Name, person.Cpf.Value, person.BirthDate, person.IsActive);

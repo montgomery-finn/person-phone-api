@@ -26,4 +26,19 @@ public class Person
         BirthDate = birthDate;
         IsActive = true;
     }
+
+    public void Update(string name, string cpf, DateTime birthDate)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name is required.", nameof(name));
+
+        Name = name;
+        Cpf = new Cpf(cpf);
+        BirthDate = birthDate;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+    }
 }

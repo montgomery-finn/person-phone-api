@@ -47,6 +47,9 @@ public class PersonService : IPersonService
         if (person is null)
             return null;
 
+        if (!person.IsActive)
+            throw new ArgumentException("Person already deleted.", nameof(id));
+
         var (name, cpf, birthDate) = request;
 
         if (await _personRepository.ExistsByCpfAsync(new Domain.ValueObjects.Cpf(cpf).Value, excludingId: id))
@@ -65,6 +68,9 @@ public class PersonService : IPersonService
 
         if (person is null)
             return false;
+
+        if (!person.IsActive)
+            throw new ArgumentException("Person already deleted.", nameof(id));
 
         person.Deactivate();
         await _personRepository.UpdateAsync(person);

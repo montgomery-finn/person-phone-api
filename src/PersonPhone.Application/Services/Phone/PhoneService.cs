@@ -51,6 +51,9 @@ public class PhoneService : IPhoneService
         if (phone is null)
             return null;
 
+        if (!phone.IsActive)
+            throw new ArgumentException("Phone already deleted.", nameof(id));
+
         var (type, number) = request;
 
         phone.Update(type, number);
@@ -66,6 +69,9 @@ public class PhoneService : IPhoneService
 
         if (phone is null)
             return false;
+
+        if (!phone.IsActive)
+            throw new ArgumentException("Phone already deleted.", nameof(id));
 
         phone.Deactivate();
         await _phoneRepository.UpdateAsync(phone);

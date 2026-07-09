@@ -115,6 +115,33 @@ public class PhoneServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsync_OnDeletedPhone_ThrowsArgumentException()
+    {
+        var service = CreateService(out var personRepository, out _);
+        var personId = await CreatePersonAsync(personRepository, "77593034674");
+        var created = await service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Mobile, "11987654321"));
+        await service.DeleteAsync(created.Id);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.UpdateAsync(created.Id, new UpdatePhoneRequest(PhoneType.Residential, "1122334455")));
+
+        Assert.Equal("id", ex.ParamName);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_OnAlreadyDeletedPhone_ThrowsArgumentException()
+    {
+        var service = CreateService(out var personRepository, out _);
+        var personId = await CreatePersonAsync(personRepository, "68445258699");
+        var created = await service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Mobile, "11987654321"));
+        await service.DeleteAsync(created.Id);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.DeleteAsync(created.Id));
+
+        Assert.Equal("id", ex.ParamName);
+    }
+
+    [Fact]
     public async Task GetAllAsync_FiltersByPersonIdAndExcludesInactive()
     {
         var service = CreateService(out var personRepository, out _);

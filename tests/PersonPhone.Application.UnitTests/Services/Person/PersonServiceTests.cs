@@ -99,4 +99,32 @@ public class PersonServiceTests
         Assert.Equal(cpfB, persisted.Cpf.Value);
         Assert.Equal(new DateTime(1992, 2, 2), persisted.BirthDate);
     }
+
+    [Fact]
+    public async Task UpdateAsync_OnDeletedPerson_ThrowsArgumentException()
+    {
+        var service = CreateService(out _);
+        var created = await service.CreateAsync(
+            new CreatePersonRequest("John Doe", "60729845257", new DateTime(1990, 1, 1)));
+        await service.DeleteAsync(created.Id);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.UpdateAsync(
+                created.Id, new UpdatePersonRequest("John Updated", "60729845257", new DateTime(1991, 3, 3))));
+
+        Assert.Equal("id", ex.ParamName);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_OnAlreadyDeletedPerson_ThrowsArgumentException()
+    {
+        var service = CreateService(out _);
+        var created = await service.CreateAsync(
+            new CreatePersonRequest("John Doe", "39053344705", new DateTime(1990, 1, 1)));
+        await service.DeleteAsync(created.Id);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.DeleteAsync(created.Id));
+
+        Assert.Equal("id", ex.ParamName);
+    }
 }

@@ -142,6 +142,76 @@ public class PhoneServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_WithDuplicateNumberForSamePerson_ThrowsArgumentException()
+    {
+        var service = CreateService(out var personRepository, out _);
+        var personId = await CreatePersonAsync(personRepository, "10433218100");
+        await service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Mobile, "11987654321"));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Commercial, "(11) 98765-4321")));
+
+        Assert.Equal("request", ex.ParamName);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithSameNumberForDifferentPerson_CreatesSuccessfully()
+    {
+        var service = CreateService(out var personRepository, out _);
+        var personAId = await CreatePersonAsync(personRepository, "96001338914");
+        var personBId = await CreatePersonAsync(personRepository, "08386379499");
+        await service.CreateAsync(new CreatePhoneRequest(personAId, PhoneType.Mobile, "11987654321"));
+
+        var response = await service.CreateAsync(new CreatePhoneRequest(personBId, PhoneType.Mobile, "11987654321"));
+
+        Assert.Equal(personBId, response.PersonId);
+        Assert.Equal("11987654321", response.Number);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithNumberOfDeletedPhone_ThrowsArgumentException()
+    {
+        var service = CreateService(out var personRepository, out _);
+        var personId = await CreatePersonAsync(personRepository, "02654235114");
+        var created = await service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Mobile, "11987654321"));
+        await service.DeleteAsync(created.Id);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Mobile, "11987654321")));
+
+        Assert.Equal("request", ex.ParamName);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithNumberOfAnotherPhoneForSamePerson_ThrowsArgumentException()
+    {
+        var service = CreateService(out var personRepository, out _);
+        var personId = await CreatePersonAsync(personRepository, "16155940789");
+        var phoneA = await service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Mobile, "11987654321"));
+        var phoneB = await service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Commercial, "1122334455"));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.UpdateAsync(phoneA.Id, new UpdatePhoneRequest(phoneA.Type, phoneB.Number)));
+
+        Assert.Equal("request", ex.ParamName);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_KeepingOwnNumber_UpdatesSuccessfully()
+    {
+        var service = CreateService(out var personRepository, out _);
+        var personId = await CreatePersonAsync(personRepository, "81618495950");
+        var created = await service.CreateAsync(new CreatePhoneRequest(personId, PhoneType.Mobile, "11987654321"));
+
+        var updated = await service.UpdateAsync(
+            created.Id, new UpdatePhoneRequest(PhoneType.Commercial, created.Number));
+
+        Assert.NotNull(updated);
+        Assert.Equal(PhoneType.Commercial, updated!.Type);
+        Assert.Equal(created.Number, updated.Number);
+    }
+
+    [Fact]
     public async Task GetAllAsync_FiltersByPersonIdAndExcludesInactive()
     {
         var service = CreateService(out var personRepository, out _);

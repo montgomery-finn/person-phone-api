@@ -25,6 +25,9 @@ public class PhoneService : IPhoneService
 
         var phone = new Domain.Entities.Phone(personId, type, number);
 
+        if (await _phoneRepository.ExistsByNumberAsync(personId, phone.Number.Value))
+            throw new ArgumentException("Phone number already registered for this person.", nameof(request));
+
         await _phoneRepository.AddAsync(phone);
 
         return ToResponse(phone);
@@ -55,6 +58,10 @@ public class PhoneService : IPhoneService
             throw new ArgumentException("Phone already deleted.", nameof(id));
 
         var (type, number) = request;
+
+        if (await _phoneRepository.ExistsByNumberAsync(
+                phone.PersonId, new Domain.ValueObjects.PhoneNumber(number).Value, excludingId: id))
+            throw new ArgumentException("Phone number already registered for this person.", nameof(request));
 
         phone.Update(type, number);
 

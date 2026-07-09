@@ -2,10 +2,12 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PersonPhone.Application.Services.Person;
 using PersonPhone.Application.Services.Phone;
 using PersonPhone.Application.Validators.Person;
 using PersonPhone.Domain.Interfaces;
+using PersonPhone.Infrastructure.Persistence;
 using PersonPhone.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,10 +23,30 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreatePersonRequestDtoValid
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddSingleton<IPersonRepository, InMemoryPersonRepository>();
-builder.Services.AddScoped<IPersonService, PersonService>();
+// Alterna entre repositório in-memory e EF Core/SQL Server via appsettings
+// (Persistence:Provider = "InMemory" | "SqlServer"). Ver seção "Persistência" no README.
+var persistenceProvider = builder.Configuration["Persistence:Provider"] ?? "InMemory";
 
-builder.Services.AddSingleton<IPhoneRepository, InMemoryPhoneRepository>();
+if (string.Equals(persistenceProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+        throw new InvalidOperationException(
+            "ConnectionStrings:DefaultConnection é obrigatória quando Persistence:Provider = \"SqlServer\".");
+
+    builder.Services.AddDbContext<PersonPhoneDbContext>(options => options.UseSqlServer(connectionString));
+
+    builder.Services.AddScoped<IPersonRepository, EfPersonRepository>();
+    builder.Services.AddScoped<IPhoneRepository, EfPhoneRepository>();
+}
+else
+{
+    builder.Services.AddSingleton<IPersonRepository, InMemoryPersonRepository>();
+    builder.Services.AddSingleton<IPhoneRepository, InMemoryPhoneRepository>();
+}
+
+builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IPhoneService, PhoneService>();
 
 builder.Services.AddProblemDetails();

@@ -14,9 +14,11 @@ O código está dividido em 4 projetos, cada um com uma responsabilidade única:
 - **`PersonPhone.Application`** — casos de uso (`PersonService`, `PhoneService`), DTOs
   (`DTOs/Person`, `DTOs/Phone`) e validadores de entrada com FluentValidation
   (`Validators/Person`, `Validators/Phone`). Depende apenas de `Domain`.
-- **`PersonPhone.Infrastructure`** — implementação dos repositórios
-  (`InMemoryRepository<T>` genérico + `InMemoryPersonRepository`,
-  `InMemoryPhoneRepository`), baseada em `ConcurrentDictionary`. Depende apenas de
+- **`PersonPhone.Infrastructure`** — duas implementações de repositório, alternáveis por
+  configuração (veja a seção "Persistência"): in-memory (`InMemoryRepository<T>` genérico
+  + `InMemoryPersonRepository`, `InMemoryPhoneRepository`, baseada em
+  `ConcurrentDictionary`) e EF Core/SQL Server (`PersonPhoneDbContext`,
+  `EfPersonRepository`, `EfPhoneRepository`, em `Persistence/`). Depende apenas de
   `Domain`.
 - **`PersonPhone.Api`** — controllers ASP.NET Core (`PersonController`,
   `PhoneController`), composition root (`Program.cs`), tratamento global de erros e
@@ -97,9 +99,77 @@ formato `ProblemDetails` que o FluentValidation já usa:
 
 ## Persistência
 
-Os repositórios são in-memory (`ConcurrentDictionary` estático dentro de
-`InMemoryRepository<T>`). Não há banco de dados real — os dados existem apenas durante a
-execução do processo e são perdidos a cada reinício da aplicação.
+A API suporta duas implementações de repositório, alternáveis por configuração — sem
+precisar recompilar nem alterar código:
+
+| Provider | Chave `Persistence:Provider` | Onde os dados vivem |
+|---|---|---|
+| **In-Memory** (padrão) | `InMemory` | `ConcurrentDictionary` estático em `InMemoryRepository<T>`. Dados existem só durante a execução do processo e são perdidos a cada restart. |
+| **SQL Server (EF Core)** | `SqlServer` | Banco `PersonPhoneDb` no container `sqlserver` do `docker-compose.yml`, via `PersonPhoneDbContext`/`EfPersonRepository`/`EfPhoneRepository`. |
+
+O provider é lido de `Persistence:Provider` (em `appsettings.json`/
+`appsettings.{Environment}.json`) e decidido em `Program.cs`. `appsettings.json` (base)
+usa `InMemory` como default seguro — comportamento inalterado para quem não configurar
+nada. `appsettings.Development.json` já vem configurado com `SqlServer` e a connection
+string apontando para o container local — como `dotnet run` usa o ambiente `Development`
+por padrão (via `launchSettings.json`), é necessário subir o `docker compose` antes de
+rodar a API localmente (veja a seção seguinte).
+
+Para voltar ao in-memory em desenvolvimento sem editar arquivos, sobrescreva a chave via
+variável de ambiente:
+
+```
+Persistence__Provider=InMemory dotnet run --project src/PersonPhone.Api
+```
+
+## Banco de dados (SQL Server via Docker)
+
+1. Subir o container (a partir da raiz do repositório):
+
+   ```
+   docker compose up -d
+   ```
+
+   Isso inicia um SQL Server 2022 (edição Developer, gratuita para dev/test) na porta
+   `1433`, usuário `sa` e a senha definida em `docker-compose.yml` — **senha de uso local
+   apenas, não usar em produção**. Os dados persistem entre restarts do container graças
+   ao volume nomeado `sqlserver_data` (só são perdidos com `docker compose down -v`).
+
+2. Instalar a ferramenta `dotnet-ef` (uma vez por checkout — a versão já está pinada em
+   `.config/dotnet-tools.json`):
+
+   ```
+   dotnet tool restore
+   ```
+
+3. Aplicar as migrations (cria o banco `PersonPhoneDb` e as tabelas `People`/`Phones`):
+
+   ```
+   ASPNETCORE_ENVIRONMENT=Development dotnet tool run dotnet-ef database update --project src/PersonPhone.Infrastructure --startup-project src/PersonPhone.Api
+   ```
+
+   > A variável `ASPNETCORE_ENVIRONMENT=Development` é necessária porque os comandos
+   > `dotnet ef` não passam pelo `launchSettings.json` — sem ela, a ferramenta lê
+   > `appsettings.json` base (provider `InMemory`) e não encontra nenhum `DbContext`
+   > registrado.
+
+4. Rodar a API normalmente (`dotnet run --project src/PersonPhone.Api`) — como o profile
+   de desenvolvimento já usa `Persistence:Provider = SqlServer`, ela conversa direto com
+   o container.
+
+Migrations são aplicadas **manualmente** (não há `Database.Migrate()` automático no
+startup da aplicação) — assim o schema do banco só muda quando alguém explicitamente
+rodar o comando acima.
+
+### Gerando novas migrations
+
+Sempre que o modelo (`PersonPhoneDbContext` ou `Persistence/Configurations/*`) mudar:
+
+```
+ASPNETCORE_ENVIRONMENT=Development dotnet tool run dotnet-ef migrations add <NomeDaMigration> --project src/PersonPhone.Infrastructure --startup-project src/PersonPhone.Api --output-dir Persistence/Migrations
+```
+
+e depois reaplicar com o mesmo comando `dotnet ef database update` do passo 3.
 
 ## Endpoints
 
@@ -125,6 +195,12 @@ execução do processo e são perdidos a cada reinício da aplicação.
   ```
   dotnet run --project src/PersonPhone.Api
   ```
+
+  Por padrão isso roda em ambiente `Development`, que já está configurado para usar
+  SQL Server via EF Core (`Persistence:Provider = SqlServer` em
+  `appsettings.Development.json`) — é necessário subir o container e aplicar as
+  migrations antes (veja "Banco de dados (SQL Server via Docker)"), ou sobrescrever
+  `Persistence:Provider` para `InMemory` caso queira rodar sem Docker.
 
 - **URLs** (definidas em `src/PersonPhone.Api/Properties/launchSettings.json`):
   - perfil `http`: `http://localhost:5196`
@@ -166,3 +242,37 @@ Dado o escopo pequeno do projeto (2 entidades, 1 método de mapeamento cada, sem
 duplicada em mais lugares), o custo de manter esse mapeamento manual explícito foi
 considerado menor que o custo/risco de gerenciar uma license key. Essa decisão está
 registrada aqui para não ser reavaliada sem esse contexto.
+
+### Construtor vazio nas entidades (`Person()`, `Phone()`)
+
+`Person` e `Phone` têm um construtor público sem parâmetros além do construtor
+principal, que existe só para satisfazer o EF Core — ele precisa de um construtor
+(mesmo que privado) para materializar entidades a partir do banco, e o mapeamento via
+`Persistence/Configurations/*` usado aqui exige que esse construtor seja acessível.
+
+Isso é uma concessão ao framework, não o ideal: em um cenário sem essa restrição de
+escopo/tempo, as entidades de domínio não deveriam expor nenhum construtor que permita
+criar um objeto em estado inválido/vazio — toda instância deveria nascer já válida, via
+o construtor principal. A forma correta de resolver isso seria persistir, no EF Core,
+classes de modelo (persistence models) separadas das entidades de domínio, com e mapear 
+explicitamente entidade ↔ modelo na leitura e escrita. Isso mantém
+o `Domain` genuinamente independente de framework, sem esse acoplamento ao
+requisito técnico do EF Core.
+
+Essa separação não foi feita aqui por decisão consciente de escopo e tempo — o
+construtor vazio foi o caminho mais simples para o tamanho atual do projeto.
+
+### `appsettings.Development.json` commitado com credencial
+
+`appsettings.Development.json` está commitado no repositório já com a connection
+string do SQL Server, incluindo usuário e senha (`sa` / `YourStr0ng!Passw0rd` — a mesma
+senha de uso local definida em `docker-compose.yml`).
+
+Isso foi feito por conveniência, para que o projeto rode localmente sem nenhuma
+configuração extra além de subir o `docker compose`. Não é uma boa prática — segredos
+não deveriam ser versionados em controle de código, mesmo quando o valor em si é
+inofensivo (senha de container local, sem exposição externa). Em um ambiente de
+produção isso não deve se repetir: a connection string (e qualquer outro segredo)
+deve vir de uma fonte externa ao repositório — variável de ambiente, secret manager
+(Azure Key Vault, AWS Secrets Manager etc.) ou `dotnet user-secrets` —, nunca de um
+arquivo `appsettings*.json` versionado.

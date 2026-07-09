@@ -1,4 +1,3 @@
-using PersonPhone.Domain.Common;
 using PersonPhone.Domain.ValueObjects;
 
 namespace PersonPhone.Domain.Entities;

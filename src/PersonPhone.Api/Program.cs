@@ -1,7 +1,9 @@
+using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using PersonPhone.Application.Services.Person;
+using PersonPhone.Application.Services.Phone;
 using PersonPhone.Application.Validators.Person;
 using PersonPhone.Domain.Interfaces;
 using PersonPhone.Infrastructure.Repositories;
@@ -10,7 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Registra TODOS os validators do assembly automaticamente
 builder.Services.AddValidatorsFromAssemblyContaining<CreatePersonRequestDtoValidator>();
@@ -20,6 +23,9 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddSingleton<IPersonRepository, InMemoryPersonRepository>();
 builder.Services.AddScoped<IPersonService, PersonService>();
+
+builder.Services.AddSingleton<IPhoneRepository, InMemoryPhoneRepository>();
+builder.Services.AddScoped<IPhoneService, PhoneService>();
 
 builder.Services.AddProblemDetails();
 

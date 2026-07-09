@@ -18,12 +18,12 @@ Accept: application/json
 
 ###
 
-GET {{HostAddress}}/person/bb8a672a-ca8f-49fb-b5cd-431a809c4e90
+GET {{HostAddress}}/person/01dcce93-074d-4c6d-b463-1aa1c11a8a1a
 Accept: application/json
 
 ###
 
-PUT {{HostAddress}}/person/bb8a672a-ca8f-49fb-b5cd-431a809c4e90
+PUT {{HostAddress}}/person/01dcce93-074d-4c6d-b463-1aa1c11a8a1a
 Content-Type: application/json
 
 {
@@ -34,7 +34,7 @@ Content-Type: application/json
 
 ###
 
-DELETE {{HostAddress}}/person/bb8a672a-ca8f-49fb-b5cd-431a809c4e90
+DELETE {{HostAddress}}/person/01dcce93-074d-4c6d-b463-1aa1c11a8a1a
 
 ###
 
@@ -71,6 +71,109 @@ Content-Type: application/json
   "name": "John Doe Updated",
   "cpf": "52998224725",
   "birthDate": "1990-01-01"
+}
+
+###
+
+# Create a dedicated Person to own the test Phones below
+POST {{HostAddress}}/person
+Content-Type: application/json
+
+{
+  "name": "Phone Owner",
+  "cpf": "39053344705",
+  "birthDate": "1988-08-08"
+}
+
+###
+
+# personId below must be replaced with the Id returned by the POST /person above
+POST {{HostAddress}}/phone
+Content-Type: application/json
+
+{
+  "personId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "type": "Mobile",
+  "number": "11987654321"
+}
+
+###
+
+GET {{HostAddress}}/phone
+Accept: application/json
+
+###
+
+GET {{HostAddress}}/phone?personId=3fa85f64-5717-4562-b3fc-2c963f66afa6
+Accept: application/json
+
+###
+
+# id below must be replaced with the Id returned by the POST /phone above
+GET {{HostAddress}}/phone/7c9e6679-7425-40de-944b-e07fc1f90ae7
+Accept: application/json
+
+###
+
+PUT {{HostAddress}}/phone/7c9e6679-7425-40de-944b-e07fc1f90ae7
+Content-Type: application/json
+
+{
+  "type": "Residential",
+  "number": "1122334455"
+}
+
+###
+
+DELETE {{HostAddress}}/phone/7c9e6679-7425-40de-944b-e07fc1f90ae7
+
+###
+
+# 400 Bad Request - PersonId does not exist
+POST {{HostAddress}}/phone
+Content-Type: application/json
+
+{
+  "personId": "00000000-0000-0000-0000-000000000001",
+  "type": "Mobile",
+  "number": "11987654321"
+}
+
+###
+
+# 400 Bad Request - PersonId belongs to a soft-deleted Person (reusing the Guid
+# of the Person deleted via DELETE /person near the top of this file)
+POST {{HostAddress}}/phone
+Content-Type: application/json
+
+{
+  "personId": "01dcce93-074d-4c6d-b463-1aa1c11a8a1a",
+  "type": "Mobile",
+  "number": "11987654321"
+}
+
+###
+
+# 400 Bad Request - Number too short (3 characters)
+POST {{HostAddress}}/phone
+Content-Type: application/json
+
+{
+  "personId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "type": "Mobile",
+  "number": "119"
+}
+
+###
+
+# 400 Bad Request - Type outside the enum
+POST {{HostAddress}}/phone
+Content-Type: application/json
+
+{
+  "personId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "type": "Landline",
+  "number": "11987654321"
 }
 
 ###

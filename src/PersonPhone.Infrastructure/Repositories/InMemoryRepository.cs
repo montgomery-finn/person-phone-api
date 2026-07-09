@@ -1,9 +1,10 @@
 using System.Collections.Concurrent;
-using PersonPhone.Domain.Common;
+using PersonPhone.Domain.Entities;
+using PersonPhone.Domain.Interfaces;
 
 namespace PersonPhone.Infrastructure.Repositories;
 
-public abstract class InMemoryRepository<T> where T : class, IEntity
+public abstract class InMemoryRepository<T> : IRepository<T> where T : class, IEntity
 {
     protected static readonly ConcurrentDictionary<Guid, T> Entities = new();
 

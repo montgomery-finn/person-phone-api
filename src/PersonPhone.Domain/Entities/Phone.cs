@@ -1,4 +1,5 @@
 using PersonPhone.Domain.Enums;
+using PersonPhone.Domain.ValueObjects;
 
 namespace PersonPhone.Domain.Entities;
 
@@ -7,7 +8,7 @@ public class Phone : IEntity
     public Guid Id { get; private set; }
     public Guid PersonId { get; private set; }
     public PhoneType Type { get; private set; }
-    public string Number { get; private set; }
+    public PhoneNumber Number { get; private set; }
     public bool IsActive { get; private set; }
 
     public Phone()
@@ -23,12 +24,10 @@ public class Phone : IEntity
         if (!Enum.IsDefined(type))
             throw new ArgumentException("Type is invalid.", nameof(type));
 
-        ValidateNumber(number);
-
         Id = Guid.NewGuid();
         PersonId = personId;
         Type = type;
-        Number = number;
+        Number = new PhoneNumber(number);
         IsActive = true;
     }
 
@@ -37,20 +36,12 @@ public class Phone : IEntity
         if (!Enum.IsDefined(type))
             throw new ArgumentException("Type is invalid.", nameof(type));
 
-        ValidateNumber(number);
-
         Type = type;
-        Number = number;
+        Number = new PhoneNumber(number);
     }
 
     public void Deactivate()
     {
         IsActive = false;
-    }
-
-    private static void ValidateNumber(string number)
-    {
-        if (string.IsNullOrWhiteSpace(number) || number.Length < 10 || number.Length > 11)
-            throw new ArgumentException("Number must be between 10 and 11 characters.", nameof(number));
     }
 }

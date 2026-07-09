@@ -17,7 +17,7 @@ public class PhoneTests
         Assert.NotEqual(Guid.Empty, phone.Id);
         Assert.Equal(personId, phone.PersonId);
         Assert.Equal(type, phone.Type);
-        Assert.Equal(number, phone.Number);
+        Assert.Equal(number, phone.Number.Value);
         Assert.True(phone.IsActive);
     }
 
@@ -67,7 +67,7 @@ public class PhoneTests
         Assert.Equal(id, phone.Id);
         Assert.Equal(personId, phone.PersonId);
         Assert.Equal(newType, phone.Type);
-        Assert.Equal(newNumber, phone.Number);
+        Assert.Equal(newNumber, phone.Number.Value);
         Assert.True(phone.IsActive);
     }
 

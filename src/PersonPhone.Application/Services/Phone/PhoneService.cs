@@ -81,6 +81,6 @@ public class PhoneService : IPhoneService
 
     private static PhoneResponse ToResponse(Domain.Entities.Phone phone)
     {
-        return new PhoneResponse(phone.Id, phone.PersonId, phone.Type, phone.Number, phone.IsActive);
+        return new PhoneResponse(phone.Id, phone.PersonId, phone.Type, phone.Number.Value, phone.IsActive);
     }
 }

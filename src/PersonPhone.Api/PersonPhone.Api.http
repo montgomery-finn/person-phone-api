@@ -92,9 +92,9 @@ POST {{HostAddress}}/phone
 Content-Type: application/json
 
 {
-  "personId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "personId": "b8de521b-fff1-4bc0-aa75-b16814d76557",
   "type": "Mobile",
-  "number": "11987654321"
+  "number": "45999989942"
 }
 
 ###
@@ -104,7 +104,7 @@ Accept: application/json
 
 ###
 
-GET {{HostAddress}}/phone?personId=3fa85f64-5717-4562-b3fc-2c963f66afa6
+GET {{HostAddress}}/phone?personId=1f2ccf17-0ff9-462e-b24d-b4302e0c65b7
 Accept: application/json
 
 ###
@@ -159,7 +159,7 @@ POST {{HostAddress}}/phone
 Content-Type: application/json
 
 {
-  "personId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "personId": "1f2ccf17-0ff9-462e-b24d-b4302e0c65b7",
   "type": "Mobile",
   "number": "119"
 }
@@ -171,7 +171,7 @@ POST {{HostAddress}}/phone
 Content-Type: application/json
 
 {
-  "personId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "personId": "1f2ccf17-0ff9-462e-b24d-b4302e0c65b7",
   "type": "Landline",
   "number": "11987654321"
 }

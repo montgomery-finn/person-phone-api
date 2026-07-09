@@ -1,5 +1,6 @@
 using FluentValidation;
 using PersonPhone.Application.DTOs.Phone;
+using PersonPhone.Domain.ValueObjects;
 
 namespace PersonPhone.Application.Validators.Phone;
 
@@ -15,6 +16,6 @@ public class CreatePhoneRequestDtoValidator : AbstractValidator<CreatePhoneReque
 
         RuleFor(p => p.Number)
             .NotEmpty().WithMessage("Number is required.")
-            .Length(10, 11).WithMessage("Number must be between 10 and 11 characters.");
+            .Must(PhoneNumber.IsValid).WithMessage("Number is invalid.");
     }
 }

@@ -161,6 +161,41 @@ Migrations são aplicadas **manualmente** (não há `Database.Migrate()` automá
 startup da aplicação) — assim o schema do banco só muda quando alguém explicitamente
 rodar o comando acima.
 
+## Rodando tudo via Docker Compose (api + SQL Server)
+
+Além do fluxo de dev acima (`dotnet run` local + `sqlserver` via compose), o
+`docker-compose.yml` também tem um serviço `api`, que builda a imagem de produção da API
+a partir do `Dockerfile` na raiz do repositório (multi-stage: `dotnet publish` em
+`Release` numa imagem `sdk:10.0`, copiado para uma imagem final `aspnet:10.0`).
+
+```
+docker compose up -d --build
+```
+
+Isso sobe os dois containers:
+
+- `sqlserver` — igual ao fluxo de dev.
+- `api` — só inicia depois que o `sqlserver` responde ao healthcheck
+  (`depends_on: condition: service_healthy`), já configurada via variáveis de ambiente
+  no `docker-compose.yml` (`Persistence__Provider=SqlServer` e
+  `ConnectionStrings__DefaultConnection` apontando para `Server=sqlserver,1433` — o nome
+  do serviço, resolvido pela rede interna do compose). Fica disponível em
+  `http://localhost:8080`.
+
+**As migrations continuam manuais**, mesmo nesse fluxo: o container `api` não roda
+`dotnet ef database update` sozinho. Antes de bater nos endpoints que tocam o banco
+(`/person`, `/phone`), aplique as migrations com o mesmo comando da seção anterior,
+rodando do host contra `localhost:1433` (a porta do `sqlserver` continua publicada
+normalmente):
+
+```
+dotnet tool restore
+ASPNETCORE_ENVIRONMENT=Development dotnet tool run dotnet-ef database update --project src/PersonPhone.Infrastructure --startup-project src/PersonPhone.Api
+```
+
+Sem esse passo, a api sobe normalmente, mas qualquer chamada que toque o banco retorna
+erro (tabela inexistente).
+
 ### Gerando novas migrations
 
 Sempre que o modelo (`PersonPhoneDbContext` ou `Persistence/Configurations/*`) mudar:

@@ -18,5 +18,21 @@ services:
       retries: 10
       start_period: 10s
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: person-phone-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      Persistence__Provider: "SqlServer"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=PersonPhoneDb;User Id=sa;Password=YourStr0ng!Passw0rd;TrustServerCertificate=True;"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
 volumes:
   sqlserver_data:
